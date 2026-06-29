@@ -213,26 +213,26 @@ def split_deleted_rows(edited_df):
     return kept, deleted
 
 # ========= 資料庫讀寫 =========
-def fetch_children(user_id):
-    data = supabase.table("children").select("*").eq("user_id", user_id).order("created_at").execute().data
+def fetch_records(user_id):
+    data = supabase.table("treatment_records").select("*").eq("user_id", user_id).order("created_at", desc=True).execute().data
     df = pd.DataFrame(data)
     if len(df) == 0:
         return pd.DataFrame()
-    rename = {
+
+    children = fetch_children(user_id)
+    if len(children) > 0:
+        name_map = dict(zip(children["id"], children["兒童姓名"]))
+        df["child_name"] = df["child_id"].map(name_map)
+
+    return df.rename(columns={
         "child_name": "兒童姓名",
-        "clinic_name": "院所名稱",
-        "birth_date": "出生日期",
-        "age": "年齡",
-        "age_group": "年齡級距",
-        "first_register_date": "首次掛號日",
-        "first_treatment_date": "首次執行日",
-        "treatment_start_date": "療程起始日",
-        "treatment_expiry_date": "療程到期日",
-        "max_sessions": "最多使用次數",
-        "used_sessions": "已使用次數",
-        "remaining_sessions": "剩餘次數",
-        "status": "狀態",
-    }
+        "treatment_code": "療程編號",
+        "treatment_date": "治療日期",
+        "weekday": "星期",
+        "session_number": "療程次數",
+        "default_therapy_types": "預設治療類型",
+        "actual_therapy_types": "實際治療類型",
+    })
     return df.rename(columns=rename)
 
 def fetch_schedule(user_id):
@@ -553,19 +553,21 @@ else:
                 if len(actual_therapy_list) == 0:
                     st.error("請至少選擇一種實際治療類型。")
                 else:
-                    supabase.table("treatment_records").insert({
-                        "user_id": user_id,
-                        "child_id": record_child_id,
-                        "treatment_code": next_code,
-                        "treatment_date": str(treatment_date),
-                        "weekday": weekday,
-                        "session_number": f"第 {next_number} 次",
-                        "default_therapy_types": default_therapy,
-                        "actual_therapy_types": "、".join(actual_therapy_list)
-                    }).execute()
-                    refresh_child_usage(user_id)
-                    st.success("已儲存實際治療紀錄")
-                    st.rerun()
+                    res = supabase.table("treatment_records").insert({
+                    "user_id": user_id,
+                    "child_id": record_child_id,
+                    "treatment_code": next_code,
+                    "treatment_date": str(treatment_date),
+                    "weekday": weekday,
+                    "session_number": f"第 {next_number} 次",
+                    "default_therapy_types": default_therapy,
+                    "actual_therapy_types": "、".join(actual_therapy_list)
+                }).execute()
+                
+                refresh_child_usage(user_id)
+                
+                st.success("已儲存實際治療紀錄，請往下查看目前實際治療紀錄")
+                st.rerun()
 
 st.divider()
 
