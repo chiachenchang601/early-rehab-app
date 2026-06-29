@@ -181,7 +181,10 @@ def display_child_table(df):
             return "color: green; font-weight: bold;"
         return "color: #555; font-weight: bold;"
 
-    styled = show_df.style.applymap(color_expiry, subset=["療程到期日"] if "療程到期日" in show_df.columns else [])
+    styled = show_df.style.map(
+        color_expiry,
+        subset=["療程到期日"] if "療程到期日" in show_df.columns else []
+    )
     styled = styled.applymap(color_status, subset=["狀態"] if "狀態" in show_df.columns else [])
     st.dataframe(styled, use_container_width=True)
 
