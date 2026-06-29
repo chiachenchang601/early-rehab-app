@@ -249,15 +249,21 @@ def fetch_records(user_id):
     data = supabase.table("treatment_records").select("*").eq("user_id", user_id).order("created_at").execute().data
     df = pd.DataFrame(data)
     if len(df) == 0:
+        return pd.DataFrame()    
+    children = fetch_children(user_id)
+    if len(children) > 0:
+        name_map = dict(zip(children["id"], children["兒童姓名"]))
+        df["child_name"] = df["child_id"].map(name_map)
         return pd.DataFrame()
     return df.rename(columns={
-        "treatment_code": "療程編號",
-        "treatment_date": "治療日期",
-        "weekday": "星期",
-        "session_number": "療程次數",
-        "default_therapy_types": "預設治療類型",
-        "actual_therapy_types": "實際治療類型",
-    })
+    "child_name": "兒童姓名",
+    "treatment_code": "療程編號",
+    "treatment_date": "治療日期",
+    "weekday": "星期",
+    "session_number": "療程次數",
+    "default_therapy_types": "預設治療類型",
+    "actual_therapy_types": "實際治療類型",
+})
 
 def count_child_records(records_df, child_id):
     if len(records_df) == 0:
