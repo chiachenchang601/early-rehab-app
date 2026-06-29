@@ -41,7 +41,7 @@ st.markdown(f"""
     background-position: center top;
 }}
 .block-container {{
-    background-color: rgba(255,255,255,0.76);
+    -color: rgba(255,255,255,0.76);
     border-radius: 28px;
     padding-top: 2rem;
     padding-bottom: 3rem;
@@ -185,7 +185,7 @@ def display_child_table(df):
         color_expiry,
         subset=["療程到期日"] if "療程到期日" in show_df.columns else []
     )
-    styled = styled.applymap(color_status, subset=["狀態"] if "狀態" in show_df.columns else [])
+    styled = styled.map(color_status, subset=["狀態"] if "狀態" in show_df.columns else [])
     st.dataframe(styled, use_container_width=True)
 
 def get_status(expiry_date, used_sessions):
